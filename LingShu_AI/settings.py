@@ -77,15 +77,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # API 配置
-DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY', 'sk-afcf8c55df714ced857b57f46b692bd1')
+DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY', 'your-aliyun-api-key')
 BASE_URL = os.environ.get('DEEPSEEK_BASE_URL', 'https://dashscope.aliyuncs.com/compatible-mode/v1')
 
 
-AMAP_API_KEY = '5522250ac12923b42bc6b5249dc41ecb'
+AMAP_API_KEY = 'your-amap-api-key'
 
 OBJECT_DETECTION = {
     'API_URL': os.environ.get('OBJECT_DETECTION_URL', 'https://dashscope.aliyuncs.com/compatible-mode/v1'),
-    'API_KEY': os.environ.get('OBJECT_DETECTION_KEY', 'sk-afcf8c55df714ced857b57f46b692bd1'),
+    'API_KEY': os.environ.get('OBJECT_DETECTION_KEY', 'your-aliyun-api-key'),
 }
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
