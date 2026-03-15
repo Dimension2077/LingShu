@@ -123,7 +123,7 @@ LingShu-AI/
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/your-username/LingShu-AI.git
+git clone https://github.com/Dimension2077/LingShu.git
 cd LingShu-AI
 ```
 
