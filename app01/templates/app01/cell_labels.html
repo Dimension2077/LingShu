@@ -1,0 +1,215 @@
+{% extends 'app01/base.html' %}
+{% load static %}
+
+{% block title %}Agent 零样本检测 · LingShu-AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.cell-page { padding: 40px 0; }
+.detect-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.img-card { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+.img-card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: .88rem; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+.img-display { width: 100%; max-height: 420px; object-fit: contain; display: block; background: #f8fbff; }
+.img-placeholder { min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); background: #f8fbff; gap: 8px; }
+.prompt-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.prompt-tag { font-size: .78rem; padding: 4px 12px; border-radius: 16px; background: rgba(0,180,216,.08); color: var(--accent); border: 1px solid rgba(0,180,216,.25); cursor: pointer; transition: all .15s; }
+.prompt-tag:hover, .prompt-tag.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+@media (max-width: 768px) { .detect-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container cell-page">
+    <div class="text-center mb-5">
+        <div class="section-divider mx-auto"></div>
+        <h1 class="section-title">Agent 零样本目标检测</h1>
+        <p class="section-sub">用自然语言提示词指挥 AI，在任意医学图像中定位目标</p>
+        <span class="dm-badge dm-badge-blue">零样本检测</span>
+        <span class="dm-badge dm-badge-orange ms-2">Agentic Vision</span>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="dm-card p-4">
+                <h5 style="font-family:'Noto Serif SC',serif;color:var(--primary);margin-bottom:16px">
+                    <i class="fa fa-sliders me-2" style="color:var(--accent)"></i>检测配置
+                </h5>
+
+                <!-- 提示词预设 -->
+                <div style="margin-bottom:16px">
+                    <label style="font-size:.82rem;font-weight:600;color:var(--text-muted);margin-bottom:8px;display:block">
+                        快速选择目标类型
+                    </label>
+                    <div class="prompt-tags">
+                        <span class="prompt-tag active" onclick="setPrompt(this,'红细胞')">红细胞</span>
+                        <span class="prompt-tag" onclick="setPrompt(this,'白细胞')">白细胞</span>
+                        <span class="prompt-tag" onclick="setPrompt(this,'血小板')">血小板</span>
+                        <span class="prompt-tag" onclick="setPrompt(this,'炎性病灶')">炎性病灶</span>
+                        <span class="prompt-tag" onclick="setPrompt(this,'肿瘤区域')">肿瘤区域</span>
+                        <span class="prompt-tag" onclick="setPrompt(this,'异常细胞')">异常细胞</span>
+                    </div>
+                </div>
+
+                <!-- 自定义提示词 -->
+                <div style="margin-bottom:20px">
+                    <label style="font-size:.82rem;font-weight:600;color:var(--primary);margin-bottom:8px;display:block">
+                        自定义检测目标描述
+                    </label>
+                    <input id="prompt-input" type="text" value="红细胞"
+                        style="width:100%;border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-family:var(--font-sans);font-size:.88rem;color:var(--text);transition:border-color .2s"
+                        onfocus="this.style.borderColor='var(--accent)'"
+                        onblur="this.style.borderColor='var(--border)'"
+                        placeholder="例如：红细胞、炎性病灶、肿瘤区域...">
+                    <div style="font-size:.73rem;color:var(--text-muted);margin-top:6px">
+                        💡 支持任意医学描述词，无需预训练
+                    </div>
+                </div>
+
+                <!-- 上传区 -->
+                <div style="margin-bottom:20px">
+                    <label style="font-size:.82rem;font-weight:600;color:var(--primary);margin-bottom:8px;display:block">
+                        上传医学图像
+                    </label>
+                    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('cell-file').click()" style="padding:28px">
+                        <span class="upload-icon" style="font-size:1.8rem">🧫</span>
+                        <div style="font-size:.85rem;font-weight:500;color:var(--text)">点击上传</div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">JPG / PNG 格式</div>
+                    </div>
+                    <input type="file" id="cell-file" accept="image/*" style="display:none" onchange="previewCell(this)">
+                </div>
+
+                <button class="btn-dm-primary w-100 py-3" id="cell-detect-btn" onclick="runCellDetection()" disabled>
+                    <i class="fa fa-crosshairs me-2"></i>Agent 开始检测
+                </button>
+            </div>
+
+            <!-- 工作原理 -->
+            <div class="dm-card p-4 mt-4" style="background:linear-gradient(135deg,#f0f8ff,#e8f4fd)">
+                <h6 style="font-family:'Noto Serif SC',serif;color:var(--primary);margin-bottom:14px">工作原理</h6>
+                <div style="display:flex;flex-direction:column;gap:12px">
+                    <div style="display:flex;gap:10px;align-items:flex-start">
+                        <span style="background:var(--accent);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">1</span>
+                        <div style="font-size:.82rem;color:var(--text);line-height:1.6">用户用<strong>自然语言</strong>描述检测目标（无需训练）</div>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:flex-start">
+                        <span style="background:var(--accent);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">2</span>
+                        <div style="font-size:.82rem;color:var(--text);line-height:1.6">Agentic 视觉模型理解提示词，在图像中搜索匹配目标</div>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:flex-start">
+                        <span style="background:var(--accent);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">3</span>
+                        <div style="font-size:.82rem;color:var(--text);line-height:1.6">返回带置信度标注框的结果图像</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="detect-grid" style="grid-template-columns:1fr">
+                <div class="img-card" style="margin-bottom:20px">
+                    <div class="img-card-header">
+                        <span>📷</span> 原始图像
+                    </div>
+                    <div id="cell-original">
+                        <div class="img-placeholder">
+                            <span style="font-size:2.5rem">🧫</span>
+                            <div style="font-size:.85rem">请上传医学图像</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="img-card">
+                    <div class="img-card-header">
+                        <span>🎯</span> Agent 检测结果
+                        <span id="cell-result-badge" class="dm-badge dm-badge-green ms-auto" style="display:none">检测完成</span>
+                    </div>
+                    <div id="cell-result">
+                        <div class="img-placeholder" id="cell-placeholder">
+                            <div id="cell-spinner" style="display:none;flex-direction:column;align-items:center;gap:10px">
+                                <div class="dm-spinner"></div>
+                                <div style="font-size:.82rem;color:var(--text-muted)">Agent 正在分析图像...</div>
+                            </div>
+                            <div id="cell-empty">
+                                <span style="font-size:2.5rem;display:block;margin-bottom:8px">🤖</span>
+                                <div style="font-size:.85rem">等待 Agent 检测</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let cellFileSelected = false;
+
+function setPrompt(el, val) {
+    document.querySelectorAll('.prompt-tag').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('prompt-input').value = val;
+}
+
+function previewCell(input) {
+    if (!input.files || !input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('cell-original').innerHTML = `<img src="${e.target.result}" class="img-display" alt="原始">`;
+        const uz = document.getElementById('upload-zone');
+        uz.innerHTML = `<span class="upload-icon" style="font-size:1.4rem">✅</span><div style="font-size:.82rem;font-weight:600;color:var(--success)">${input.files[0].name}</div>`;
+        cellFileSelected = true;
+        document.getElementById('cell-detect-btn').disabled = false;
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+async function runCellDetection() {
+    if (!cellFileSelected) return;
+    const prompt = document.getElementById('prompt-input').value.trim() || '红细胞';
+    const btn = document.getElementById('cell-detect-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Agent 分析中...';
+
+    document.getElementById('cell-empty').style.display = 'none';
+    document.getElementById('cell-spinner').style.display = 'flex';
+
+    try {
+        const formData = new FormData();
+        formData.append('image', document.getElementById('cell-file').files[0]);
+        formData.append('prompt', prompt);
+
+        const resp = await fetch('/cell/detect/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData,
+        });
+
+        if (!resp.ok) throw new Error('检测服务暂时不可用');
+
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        document.getElementById('cell-result').innerHTML = `<img src="${url}" class="img-display" alt="检测结果">`;
+        document.getElementById('cell-result-badge').style.display = 'inline-block';
+
+    } catch (err) {
+        document.getElementById('cell-spinner').style.display = 'none';
+        document.getElementById('cell-empty').style.display = 'block';
+        document.getElementById('cell-empty').innerHTML = `<span style="font-size:2rem;display:block;margin-bottom:8px">❌</span><div style="font-size:.83rem;color:var(--danger)">${err.message}</div>`;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa fa-crosshairs me-2"></i>重新检测';
+}
+
+function getCookie(name) {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta && name === 'csrftoken') return meta.getAttribute('content');
+    for (let c of document.cookie.split(';')) {
+        const [k,v] = c.trim().split('=');
+        if (k === name) return decodeURIComponent(v);
+    }
+    return '';
+}
+</script>
+{% endblock %}

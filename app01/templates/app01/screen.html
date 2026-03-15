@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>疾病大数据可视化 · 灵枢智医</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        background: #020c1a;
+        color: #e0f0ff;
+        font-family: 'Noto Sans SC', sans-serif;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+    /* 扫描线效果 */
+    body::before {
+        content: '';
+        position: fixed; inset: 0;
+        background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,180,216,.015) 2px, rgba(0,180,216,.015) 4px);
+        pointer-events: none;
+        z-index: 9998;
+    }
+
+    /* 顶部标题栏 */
+    .screen-header {
+        background: linear-gradient(90deg, rgba(0,40,80,.9), rgba(0,60,120,.95), rgba(0,40,80,.9));
+        border-bottom: 1px solid rgba(0,180,216,.3);
+        padding: 12px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+    }
+    .screen-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #00b4d8, transparent);
+    }
+    .header-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        background: linear-gradient(90deg, #48cae4, #00b4d8, #90e0ef);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .header-sub { font-size: .8rem; color: rgba(0,180,216,.7); letter-spacing: .05em; }
+    .header-time { font-size: .85rem; color: rgba(200,230,255,.7); }
+
+    /* 主体网格 */
+    .screen-body {
+        display: grid;
+        grid-template-columns: 1fr 1.4fr 1fr;
+        grid-template-rows: auto auto;
+        gap: 16px;
+        padding: 16px 24px 24px;
+    }
+
+    /* 图表卡片 */
+    .chart-card {
+        background: rgba(0,30,60,.6);
+        border: 1px solid rgba(0,180,216,.2);
+        border-radius: 10px;
+        padding: 16px;
+        position: relative;
+        backdrop-filter: blur(4px);
+    }
+    .chart-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 16px; right: 16px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(0,180,216,.6), transparent);
+    }
+    .card-title {
+        font-size: .82rem;
+        color: #48cae4;
+        letter-spacing: .08em;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .card-title::before {
+        content: '';
+        display: inline-block;
+        width: 3px;
+        height: 12px;
+        background: #00b4d8;
+        border-radius: 2px;
+    }
+    .chart-box { width: 100%; }
+
+    /* 中央大图 */
+    .chart-card.center {
+        grid-column: 2;
+        grid-row: 1 / 3;
+    }
+
+    /* 统计数字栏 */
+    .stats-bar {
+        grid-column: 1 / 4;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+    }
+    .stat-block {
+        background: rgba(0,30,60,.6);
+        border: 1px solid rgba(0,180,216,.2);
+        border-radius: 8px;
+        padding: 14px 16px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-block::after {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0;
+        width: 100%; height: 2px;
+        background: linear-gradient(90deg, transparent, #00b4d8, transparent);
+    }
+    .stat-num {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #00b4d8;
+        font-variant-numeric: tabular-nums;
+        display: block;
+    }
+    .stat-label { font-size: .72rem; color: rgba(200,230,255,.6); letter-spacing: .05em; }
+
+    /* 返回按钮 */
+    .back-btn {
+        position: fixed;
+        top: 16px;
+        right: 24px;
+        background: rgba(0,40,80,.8);
+        border: 1px solid rgba(0,180,216,.4);
+        color: #48cae4;
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: .8rem;
+        cursor: pointer;
+        text-decoration: none;
+        z-index: 9999;
+        transition: all .2s;
+    }
+    .back-btn:hover { background: rgba(0,180,216,.15); color: #48cae4; }
+
+    /* 角落装饰 */
+    .corner-decor {
+        position: absolute;
+        width: 16px; height: 16px;
+        border-color: rgba(0,180,216,.5);
+        border-style: solid;
+    }
+    .corner-tl { top: 4px; left: 4px; border-width: 2px 0 0 2px; }
+    .corner-tr { top: 4px; right: 4px; border-width: 2px 2px 0 0; }
+    .corner-bl { bottom: 4px; left: 4px; border-width: 0 0 2px 2px; }
+    .corner-br { bottom: 4px; right: 4px; border-width: 0 2px 2px 0; }
+    </style>
+</head>
+<body>
+
+<a href="/index/" class="back-btn">← 返回平台</a>
+
+<!-- 顶部标题 -->
+<div class="screen-header">
+    <div>
+        <div class="header-title">⬡ 灵枢智医 · 疾病大数据可视化监控平台</div>
+        <div class="header-sub">LingShu Disease Surveillance Dashboard</div>
+    </div>
+    <div class="header-time" id="clock"></div>
+</div>
+
+<!-- 统计数字栏 -->
+<div style="padding:12px 24px 0">
+<div class="stats-bar">
+    <div class="stat-block">
+        <div class="corner-decor corner-tl"></div><div class="corner-decor corner-br"></div>
+        <span class="stat-num" id="s1">1,284</span>
+        <div class="stat-label">今日新增病例</div>
+    </div>
+    <div class="stat-block">
+        <span class="stat-num" id="s2" style="color:#52c41a">98,432</span>
+        <div class="stat-label">累计检测人数</div>
+    </div>
+    <div class="stat-block">
+        <span class="stat-num" id="s3" style="color:#faad14">342</span>
+        <div class="stat-label">重症监测病例</div>
+    </div>
+    <div class="stat-block">
+        <span class="stat-num" id="s4" style="color:#f5222d">67</span>
+        <div class="stat-label">高风险预警区域</div>
+    </div>
+    <div class="stat-block">
+        <span class="stat-num" id="s5" style="color:#48cae4">94.7%</span>
+        <div class="stat-label">AI 诊断准确率</div>
+    </div>
+</div>
+</div>
+
+<!-- 图表主体 -->
+<div class="screen-body">
+
+    <!-- 左上：发病趋势折线图 -->
+    <div class="chart-card" style="position:relative">
+        <div class="corner-decor corner-tl"></div>
+        <div class="corner-decor corner-br"></div>
+        <div class="card-title">近30日发病趋势</div>
+        <div id="chart-trend" class="chart-box" style="height:220px"></div>
+    </div>
+
+    <!-- 中央：各地区发病分布（模拟地图/雷达图） -->
+    <div class="chart-card center" style="position:relative">
+        <div class="corner-decor corner-tl"></div>
+        <div class="corner-decor corner-tr"></div>
+        <div class="corner-decor corner-bl"></div>
+        <div class="corner-decor corner-br"></div>
+        <div class="card-title">各地区病例分布（雷达图）</div>
+        <div id="chart-radar" class="chart-box" style="height:480px"></div>
+    </div>
+
+    <!-- 右上：病种占比饼图 -->
+    <div class="chart-card" style="position:relative">
+        <div class="corner-decor corner-tl"></div>
+        <div class="corner-decor corner-br"></div>
+        <div class="card-title">病种占比分析</div>
+        <div id="chart-pie" class="chart-box" style="height:220px"></div>
+    </div>
+
+    <!-- 左下：年龄段分布柱状图 -->
+    <div class="chart-card" style="position:relative">
+        <div class="corner-decor corner-tl"></div>
+        <div class="corner-decor corner-br"></div>
+        <div class="card-title">患者年龄段分布</div>
+        <div id="chart-age" class="chart-box" style="height:220px"></div>
+    </div>
+
+    <!-- 右下：周环比变化 -->
+    <div class="chart-card" style="position:relative">
+        <div class="corner-decor corner-tl"></div>
+        <div class="corner-decor corner-br"></div>
+        <div class="card-title">周环比增减变化</div>
+        <div id="chart-bar" class="chart-box" style="height:220px"></div>
+    </div>
+
+</div>
+<!-- 趋势预测模块 -->
+<div style="margin-top:2rem;background:rgba(255,255,255,.05);border-radius:16px;padding:1.5rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <div style="color:#7fffd4;font-size:1rem;font-weight:600">
+            📈 疾病发展趋势预测（Prophet 时序模型）
+        </div>
+        <select id="disease-select" onchange="loadTrend()"
+                style="background:rgba(255,255,255,1);color:#000000;border:1px solid rgba(255,255,255,.2);
+                       border-radius:8px;padding:4px 12px;font-size:.85rem">
+            <option value="流感">流感</option>
+            <option value="肺炎">肺炎</option>
+            <option value="高血压">高血压</option>
+            <option value="糖尿病">糖尿病</option>
+            <option value="新冠">新冠</option>
+        </select>
+    </div>
+    <div id="trend-chart" style="height:320px"></div>
+    <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-top:8px;text-align:right">
+        蓝色：历史数据 · 橙色：预测值 · 阴影：预测置信区间
+    </div>
+</div>
+<script>
+// 时钟
+function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+        now.toLocaleDateString('zh-CN') + ' ' + now.toLocaleTimeString('zh-CN');
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+
+function loadTrend() {
+    const disease = document.getElementById('disease-select').value;
+    const chart = echarts.init(document.getElementById('trend-chart'));
+    chart.showLoading({ text: '预测中...', textColor: '#7fffd4', maskColor: 'rgba(0,0,0,.3)' });
+
+    fetch(`/screen/trend/?disease=${encodeURIComponent(disease)}`)
+        .then(r => r.json())
+        .then(data => {
+            chart.hideLoading();
+            if (data.code !== 200) return;
+
+            const { history, forecast } = data;
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+                legend: {
+                    data: ['历史数据', '预测值', '置信区间'],
+                    textStyle: { color: '#ccc' }
+                },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: {
+                    type: 'category',
+                    data: [...history.dates, ...forecast.dates],
+                    axisLabel: { color: '#aaa', fontSize: 11, rotate: 30 },
+                    axisLine: { lineStyle: { color: 'rgba(255,255,255,.2)' } },
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: { color: '#aaa' },
+                    splitLine: { lineStyle: { color: 'rgba(255,255,255,.08)' } },
+                },
+                series: [
+                    {
+                        name: '历史数据',
+                        type: 'line',
+                        data: [...history.values, ...new Array(forecast.dates.length).fill(null)],
+                        lineStyle: { color: '#00bcd4', width: 2 },
+                        itemStyle: { color: '#00bcd4' },
+                        symbol: 'none',
+                    },
+                    {
+                        name: '预测值',
+                        type: 'line',
+                        data: [...new Array(history.dates.length).fill(null), ...forecast.values],
+                        lineStyle: { color: '#ff9800', width: 2, type: 'dashed' },
+                        itemStyle: { color: '#ff9800' },
+                        symbol: 'none',
+                    },
+                    {
+                        name: '置信区间',
+                        type: 'line',
+                        data: [...new Array(history.dates.length).fill(null), ...forecast.upper],
+                        lineStyle: { opacity: 0 },
+                        symbol: 'none',
+                        areaStyle: { opacity: 0 },
+                        stack: 'confidence',
+                    },
+                    {
+                        type: 'line',
+                        data: [...new Array(history.dates.length).fill(null),
+                               ...forecast.lower.map((v, i) => forecast.upper[i] - v)],
+                        lineStyle: { opacity: 0 },
+                        symbol: 'none',
+                        areaStyle: { color: 'rgba(255,152,0,.15)' },
+                        stack: 'confidence',
+                    },
+                ]
+            });
+        })
+        .catch(() => chart.hideLoading());
+}
+
+// 大屏加载完后调用
+loadTrend();
+
+
+// 颜色主题
+const COLORS = ['#00b4d8','#48cae4','#90e0ef','#0096c7','#0077b6','#52c41a','#faad14','#f5222d'];
+const GRID_COLOR = 'rgba(0,180,216,.12)';
+const AXIS_COLOR = 'rgba(200,230,255,.4)';
+const TEXT_COLOR = 'rgba(200,230,255,.75)';
+
+const baseOpt = {
+    backgroundColor: 'transparent',
+    textStyle: { color: TEXT_COLOR, fontFamily: 'Noto Sans SC' },
+};
+
+// 1. 发病趋势折线
+const chartTrend = echarts.init(document.getElementById('chart-trend'));
+const days = Array.from({length:30}, (_,i) => `${i+1}日`);
+const trendData = Array.from({length:30}, () => Math.floor(800 + Math.random()*600));
+chartTrend.setOption({
+    ...baseOpt,
+    grid: { top:20, right:16, bottom:24, left:40 },
+    xAxis: { type:'category', data: days, axisLabel: { color: AXIS_COLOR, fontSize:9, interval:4 }, axisLine:{ lineStyle:{color: AXIS_COLOR} }, splitLine:{show:false} },
+    yAxis: { type:'value', axisLabel:{color: AXIS_COLOR, fontSize:9}, splitLine:{lineStyle:{color: GRID_COLOR}}, axisLine:{show:false} },
+    series: [{
+        data: trendData,
+        type:'line',
+        smooth: true,
+        lineStyle: { color:'#00b4d8', width:2 },
+        areaStyle: { color: { type:'linear', x:0,y:0,x2:0,y2:1, colorStops:[{offset:0,color:'rgba(0,180,216,.35)'},{offset:1,color:'rgba(0,180,216,.02)'}] } },
+        symbol:'none',
+    }],
+    tooltip: { trigger:'axis', backgroundColor:'rgba(0,30,60,.9)', borderColor:'#00b4d8', textStyle:{color:'#e0f0ff',fontSize:11} },
+});
+
+// 2. 雷达图 - 各地区
+const chartRadar = echarts.init(document.getElementById('chart-radar'));
+const regions = ['华北','华东','华南','华中','西南','西北','东北'];
+chartRadar.setOption({
+    ...baseOpt,
+    radar: {
+        indicator: regions.map(r => ({ name: r, max: 5000 })),
+        shape: 'polygon',
+        center:['50%','50%'],
+        radius: '55%',
+        axisName: { color: TEXT_COLOR, fontSize: 12, fontWeight: 500 },
+        splitLine: { lineStyle: { color: 'rgba(0,180,216,.2)' } },
+        splitArea: { areaStyle: { color: ['rgba(0,180,216,.02)','rgba(0,180,216,.06)'] } },
+        axisLine: { lineStyle: { color: 'rgba(0,180,216,.25)' } },
+    },
+    legend: {
+        data:['呼吸道疾病','心血管疾病','消化系统'],
+        bottom: 8,
+        textStyle: { color: TEXT_COLOR, fontSize: 11 },
+        itemWidth: 10, itemHeight: 10,
+    },
+    series: [{
+        type:'radar',
+        data:[
+            { value:[3200,4100,3800,2900,1800,1200,2400], name:'呼吸道疾病',
+              areaStyle:{color:'rgba(0,180,216,.2)'}, lineStyle:{color:'#00b4d8'}, itemStyle:{color:'#00b4d8'} },
+            { value:[1800,2200,1600,2100,900,600,1300], name:'心血管疾病',
+              areaStyle:{color:'rgba(82,196,26,.2)'}, lineStyle:{color:'#52c41a'}, itemStyle:{color:'#52c41a'} },
+            { value:[2400,1900,2800,1700,1400,800,1800], name:'消化系统',
+              areaStyle:{color:'rgba(250,173,20,.2)'}, lineStyle:{color:'#faad14'}, itemStyle:{color:'#faad14'} },
+        ],
+    }],
+    tooltip: { backgroundColor:'rgba(0,30,60,.9)', borderColor:'#00b4d8', textStyle:{color:'#e0f0ff',fontSize:11} },
+});
+
+// 3. 病种占比饼图
+const chartPie = echarts.init(document.getElementById('chart-pie'));
+chartPie.setOption({
+    ...baseOpt,
+    legend: { orient:'vertical', right:4, top:'center', textStyle:{color:TEXT_COLOR, fontSize:9}, itemWidth:8, itemHeight:8 },
+    series:[{
+        type:'pie',
+        center:['38%','50%'],
+        radius:['42%','72%'],
+        data:[
+            {value:35,name:'呼吸道'},
+            {value:24,name:'心血管'},
+            {value:18,name:'消化系统'},
+            {value:12,name:'神经系统'},
+            {value:11,name:'其他'},
+        ],
+        itemStyle: { borderRadius:4, borderColor:'transparent', borderWidth:2 },
+        color: COLORS,
+        label:{ show:false },
+        emphasis:{ label:{show:true, color:'#fff', fontSize:11} },
+    }],
+    tooltip: { backgroundColor:'rgba(0,30,60,.9)', borderColor:'#00b4d8', textStyle:{color:'#e0f0ff',fontSize:11}, formatter:'{b}: {c}%' },
+});
+
+// 4. 年龄段柱状图
+const chartAge = echarts.init(document.getElementById('chart-age'));
+chartAge.setOption({
+    ...baseOpt,
+    grid:{ top:16, right:12, bottom:28, left:36 },
+    xAxis:{ type:'category', data:['0-14','15-29','30-44','45-59','60-74','75+'], axisLabel:{color:AXIS_COLOR,fontSize:9}, axisLine:{lineStyle:{color:AXIS_COLOR}}, splitLine:{show:false} },
+    yAxis:{ type:'value', axisLabel:{color:AXIS_COLOR,fontSize:9}, splitLine:{lineStyle:{color:GRID_COLOR}}, axisLine:{show:false} },
+    series:[{
+        type:'bar',
+        data:[680,1240,1820,2340,3120,980],
+        itemStyle:{ color:{ type:'linear', x:0,y:0,x2:0,y2:1, colorStops:[{offset:0,color:'#00b4d8'},{offset:1,color:'rgba(0,180,216,.25)'}] }, borderRadius:[4,4,0,0] },
+        barMaxWidth:28,
+    }],
+    tooltip:{ trigger:'axis', backgroundColor:'rgba(0,30,60,.9)', borderColor:'#00b4d8', textStyle:{color:'#e0f0ff',fontSize:11} },
+});
+
+// 5. 周环比变化条形图
+const chartBar = echarts.init(document.getElementById('chart-bar'));
+const weeks = ['W1','W2','W3','W4','W5','W6','W7','W8'];
+const barData = [12,-8,24,-15,18,32,-6,9];
+chartBar.setOption({
+    ...baseOpt,
+    grid:{ top:16, right:12, bottom:28, left:42 },
+    xAxis:{ type:'category', data:weeks, axisLabel:{color:AXIS_COLOR,fontSize:9}, axisLine:{lineStyle:{color:AXIS_COLOR}}, splitLine:{show:false} },
+    yAxis:{ type:'value', axisLabel:{color:AXIS_COLOR,fontSize:9,formatter:v=>v+'%'}, splitLine:{lineStyle:{color:GRID_COLOR}}, axisLine:{show:false} },
+    series:[{
+        type:'bar',
+        data: barData.map(v=>({value:v, itemStyle:{color:v>=0?'rgba(245,34,45,.8)':'rgba(82,196,26,.8)', borderRadius:v>=0?[4,4,0,0]:[0,0,4,4]}})),
+        barMaxWidth:28,
+        markLine:{ data:[{yAxis:0}], lineStyle:{color:'rgba(0,180,216,.4)',width:1}, label:{show:false}, symbol:['none','none'] },
+    }],
+    tooltip:{ trigger:'axis', backgroundColor:'rgba(0,30,60,.9)', borderColor:'#00b4d8', textStyle:{color:'#e0f0ff',fontSize:11}, formatter: p=>`第${p[0].name}周: ${p[0].value>0?'+':''}${p[0].value}%` },
+});
+
+// 数字滚动动画
+function animateNumber(el, target, duration=1500) {
+    const start = 0;
+    const step = (timestamp) => {
+        const progress = Math.min(timestamp / duration, 1);
+        const current = Math.round(start + (target - start) * progress);
+        el.textContent = current.toLocaleString();
+        if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+}
+
+// 响应式
+window.addEventListener('resize', () => {
+    [chartTrend, chartRadar, chartPie, chartAge, chartBar].forEach(c => c.resize());
+});
+
+// 实时模拟数据更新
+setInterval(() => {
+    const delta = Math.floor(Math.random() * 20) - 5;
+    const s1 = document.getElementById('s1');
+    const cur = parseInt(s1.textContent.replace(/,/g,'')) + delta;
+    s1.textContent = Math.max(0,cur).toLocaleString();
+}, 3000);
+</script>
+</body>
+</html>

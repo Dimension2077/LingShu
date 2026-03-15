@@ -1,0 +1,161 @@
+{% extends 'app01/base.html' %}
+{% load static %}
+
+{% block title %}MedMamba 原理介绍 · LingShu-AI{% endblock %}
+
+{% block content %}
+<div class="container" style="padding:40px 0">
+    <div class="text-center mb-5">
+        <div class="section-divider mx-auto"></div>
+        <h1 class="section-title">MedMamba 架构原理</h1>
+        <p class="section-sub">状态空间模型在医学图像分析中的应用</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- 左侧导航 -->
+        <div class="col-lg-3">
+            <div class="dm-card p-3" style="position:sticky;top:86px">
+                <div style="font-size:.8rem;font-weight:600;color:var(--primary);margin-bottom:12px;padding:0 8px">目录</div>
+                <a href="#intro" class="d-block" style="padding:8px 12px;border-radius:8px;font-size:.83rem;color:var(--text-muted);text-decoration:none;transition:all .15s"
+                    onmouseover="this.style.background='rgba(0,180,216,.08)';this.style.color='var(--accent)'"
+                    onmouseout="this.style.background='';this.style.color='var(--text-muted)'">什么是 MedMamba</a>
+                <a href="#ssm" class="d-block" style="padding:8px 12px;border-radius:8px;font-size:.83rem;color:var(--text-muted);text-decoration:none;transition:all .15s"
+                    onmouseover="this.style.background='rgba(0,180,216,.08)';this.style.color='var(--accent)'"
+                    onmouseout="this.style.background='';this.style.color='var(--text-muted)'">状态空间模型（SSM）</a>
+                <a href="#compare" class="d-block" style="padding:8px 12px;border-radius:8px;font-size:.83rem;color:var(--text-muted);text-decoration:none;transition:all .15s"
+                    onmouseover="this.style.background='rgba(0,180,216,.08)';this.style.color='var(--accent)'"
+                    onmouseout="this.style.background='';this.style.color='var(--text-muted)'">与 CNN/Transformer 对比</a>
+                <a href="#cell-app" class="d-block" style="padding:8px 12px;border-radius:8px;font-size:.83rem;color:var(--text-muted);text-decoration:none;transition:all .15s"
+                    onmouseover="this.style.background='rgba(0,180,216,.08)';this.style.color='var(--accent)'"
+                    onmouseout="this.style.background='';this.style.color='var(--text-muted)'">血细胞场景应用</a>
+                <hr style="margin:10px 0">
+                <a href="/lung/" class="btn-dm-primary text-decoration-none text-center d-block" style="padding:10px;font-size:.84rem">
+                    体验血细胞分析 →
+                </a>
+            </div>
+        </div>
+
+        <!-- 右侧内容 -->
+        <div class="col-lg-9">
+            <!-- 什么是 MedMamba -->
+            <div class="dm-card p-5 mb-4" id="intro">
+                <h3 style="font-family:'Noto Serif SC',serif;color:var(--primary);margin-bottom:16px">什么是 MedMamba？</h3>
+                <p style="font-size:.9rem;color:var(--text);line-height:1.9;margin-bottom:16px">
+                    MedMamba 是一种专为医学图像分析设计的深度学习架构，其核心基于 <strong>Mamba</strong> — 一种新兴的状态空间模型（State Space Model, SSM）框架。
+                    它在保持强大图像理解能力的同时，相比 Transformer 架构具有更低的计算复杂度，尤其适合处理高分辨率医学影像。
+                </p>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+                    <div style="text-align:center;padding:16px;background:#f0f8ff;border-radius:12px;border:1px solid var(--border)">
+                        <div style="font-size:1.8rem;margin-bottom:8px">⚡</div>
+                        <div style="font-weight:600;font-size:.88rem;color:var(--primary);margin-bottom:4px">线性复杂度</div>
+                        <div style="font-size:.78rem;color:var(--text-muted);line-height:1.5">O(n) 序列处理复杂度，比 Transformer 的 O(n²) 高效</div>
+                    </div>
+                    <div style="text-align:center;padding:16px;background:#f0f8ff;border-radius:12px;border:1px solid var(--border)">
+                        <div style="font-size:1.8rem;margin-bottom:8px">🌐</div>
+                        <div style="font-weight:600;font-size:.88rem;color:var(--primary);margin-bottom:4px">全局感受野</div>
+                        <div style="font-size:.78rem;color:var(--text-muted);line-height:1.5">每个位置都能关注全局上下文，不受局部窗口限制</div>
+                    </div>
+                    <div style="text-align:center;padding:16px;background:#f0f8ff;border-radius:12px;border:1px solid var(--border)">
+                        <div style="font-size:1.8rem;margin-bottom:8px">🏥</div>
+                        <div style="font-weight:600;font-size:.88rem;color:var(--primary);margin-bottom:4px">医学专项</div>
+                        <div style="font-size:.78rem;color:var(--text-muted);line-height:1.5">针对血细胞、病理切片等医疗影像进行优化</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SSM 原理 -->
+            <div class="dm-card p-5 mb-4" id="ssm">
+                <h3 style="font-family:'Noto Serif SC',serif;color:var(--primary);margin-bottom:16px">状态空间模型（SSM）</h3>
+                <p style="font-size:.9rem;color:var(--text);line-height:1.9;margin-bottom:16px">
+                    状态空间模型是一类将连续序列映射到输出的数学框架，其核心方程如下：
+                </p>
+                <div style="background:#0a3d62;border-radius:10px;padding:20px;margin-bottom:16px;overflow-x:auto">
+                    <pre style="color:#48cae4;font-size:.85rem;margin:0;font-family:monospace;white-space:pre-wrap">
+h'(t) = A · h(t) + B · x(t)    # 状态转移方程
+y(t)  = C · h(t) + D · x(t)    # 输出方程
+
+# 其中：
+# x(t): 输入信号（图像 patch 序列）
+# h(t): 隐状态（记忆向量）
+# y(t): 输出特征
+# A, B, C, D: 可学习参数矩阵</pre>
+                </div>
+                <p style="font-size:.88rem;color:var(--text-muted);line-height:1.8">
+                    Mamba 在此基础上引入了<strong style="color:var(--primary)">选择性机制（Selective SSM）</strong>，
+                    使模型能够根据输入内容动态调整状态转移矩阵，解决了传统 SSM 无法进行内容感知的问题。
+                </p>
+            </div>
+
+            <!-- 对比 -->
+            <div class="dm-card p-5 mb-4" id="compare">
+                <h3 style="font-family:'Noto Serif SC',serif;color:var(--primary);margin-bottom:20px">与 CNN / Transformer 对比</h3>
+                <div style="overflow-x:auto">
+                    <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+                        <thead>
+                            <tr style="background:linear-gradient(135deg,var(--primary),#1a6ea8);color:#fff">
+                                <th style="padding:12px 16px;text-align:left;border-radius:8px 0 0 0">特性</th>
+                                <th style="padding:12px 16px;text-align:center">CNN</th>
+                                <th style="padding:12px 16px;text-align:center">Transformer</th>
+                                <th style="padding:12px 16px;text-align:center;border-radius:0 8px 0 0">MedMamba (SSM)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in "感受野,局部,全局,全局|计算复杂度,O(n),O(n²),O(n)|内存占用,低,高,中|长序列处理,弱,弱,强|医学图像适配,一般,一般,强|训练速度,快,慢,快".split('|') %}
+                            {% with cols=row.split(',') %}
+                            <tr style="border-bottom:1px solid var(--border)">
+                                <td style="padding:12px 16px;font-weight:600;color:var(--primary)">{{ cols.0 }}</td>
+                                <td style="padding:12px 16px;text-align:center;color:var(--text-muted)">{{ cols.1 }}</td>
+                                <td style="padding:12px 16px;text-align:center;color:var(--text-muted)">{{ cols.2 }}</td>
+                                <td style="padding:12px 16px;text-align:center;color:var(--accent);font-weight:500">{{ cols.3 }}</td>
+                            </tr>
+                            {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 血细胞应用 -->
+            <div class="dm-card p-5" id="cell-app">
+                <h3 style="font-family:'Noto Serif SC',serif;color:var(--primary);margin-bottom:16px">在血细胞图像分类中的应用</h3>
+                <p style="font-size:.9rem;color:var(--text);line-height:1.9;margin-bottom:20px">
+                    在 LingShu-AI 平台中，我们将 MedMamba 应用于血细胞图像的四分类任务：
+                </p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+                    <div style="display:flex;gap:12px;align-items:center;padding:14px;background:#f0fff4;border:1px solid rgba(82,196,26,.3);border-radius:10px">
+                        <span style="font-size:1.4rem">✅</span>
+                        <div>
+                            <div style="font-weight:600;color:#27ae60;font-size:.88rem">正常</div>
+                            <div style="font-size:.78rem;color:var(--text-muted)">正常血细胞形态</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:center;padding:14px;background:#fffbf0;border:1px solid rgba(250,173,20,.3);border-radius:10px">
+                        <span style="font-size:1.4rem">⚠️</span>
+                        <div>
+                            <div style="font-weight:600;color:#faad14;font-size:.88rem">锯齿状</div>
+                            <div style="font-size:.78rem;color:var(--text-muted)">细胞形态异常变化</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:center;padding:14px;background:#fff5f5;border:1px solid rgba(245,34,45,.3);border-radius:10px">
+                        <span style="font-size:1.4rem">🔴</span>
+                        <div>
+                            <div style="font-weight:600;color:#f5222d;font-size:.88rem">腺癌</div>
+                            <div style="font-size:.78rem;color:var(--text-muted)">恶性肿瘤细胞特征</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:center;padding:14px;background:#fff8f0;border:1px solid rgba(250,140,22,.3);border-radius:10px">
+                        <span style="font-size:1.4rem">🟠</span>
+                        <div>
+                            <div style="font-weight:600;color:#fa8c16;font-size:.88rem">腺瘤</div>
+                            <div style="font-size:.78rem;color:var(--text-muted)">良性肿瘤细胞特征</div>
+                        </div>
+                    </div>
+                </div>
+                <a href="/lung/" class="btn-dm-accent text-decoration-none d-inline-flex align-items-center gap-2">
+                    <i class="fa fa-flask"></i> 立即体验分类分析
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

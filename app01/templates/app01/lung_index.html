@@ -1,0 +1,322 @@
+{% extends 'app01/base.html' %}
+{% load static %}
+
+{% block title %}血细胞图像分析 · MedMamba · Lingshu-AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.lung-page { padding: 40px 0; }
+
+.result-circle {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    border: 4px solid;
+    transition: all .5s;
+    position: relative;
+}
+
+.result-circle::before {
+    content: '';
+    position: absolute; inset: -8px;
+    border-radius: 50%;
+    border: 2px solid;
+    opacity: .3;
+    animation: pulseRing 2s ease-in-out infinite;
+}
+
+@keyframes pulseRing {
+    0%, 100% { transform: scale(1); opacity: .3; }
+    50% { transform: scale(1.05); opacity: .1; }
+}
+
+.conf-bar {
+    height: 8px;
+    background: #e8f0f8;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.conf-fill {
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--accent), var(--primary));
+    transition: width 1s ease;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.cat-item {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    font-size: .82rem;
+    transition: all .2s;
+    cursor: default;
+}
+
+.cat-item.active {
+    background: rgba(0,180,216,.08);
+    border-color: var(--accent);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container lung-page">
+    <div class="text-center mb-5">
+        <div class="section-divider mx-auto"></div>
+        <h1 class="section-title">MedMamba 血细胞图像分析</h1>
+        <p class="section-sub">基于状态空间模型架构的医学图像智能分类</p>
+        <a href="/lungkonw/" class="dm-badge dm-badge-blue text-decoration-none me-2">了解 MedMamba 原理</a>
+        <span class="dm-badge dm-badge-green">SSM 架构</span>
+    </div>
+
+    <div class="row g-4">
+        <!-- 左侧上传 -->
+        <div class="col-lg-5">
+            <div class="dm-card p-4">
+                <h5 style="font-family:'Noto Serif SC',serif;color:var(--primary);margin-bottom:20px">
+                    <i class="fa fa-upload me-2" style="color:var(--accent)"></i>上传血细胞图像
+                </h5>
+
+                <div class="upload-zone" id="upload-zone" onclick="document.getElementById('lung-file').click()" style="margin-bottom:20px">
+                    <span class="upload-icon">🧬</span>
+                    <div style="font-size:.9rem;font-weight:500">点击上传图像</div>
+                    <div style="font-size:.77rem;color:var(--text-muted);margin-top:6px">支持 JPG / PNG 格式</div>
+                </div>
+                <input type="file" id="lung-file" accept="image/*" style="display:none" onchange="previewLung(this)">
+
+                <div id="lung-preview-wrap" style="display:none;margin-bottom:20px">
+                    <img id="lung-preview" style="width:100%;border-radius:10px;border:1px solid var(--border)" alt="预览">
+                </div>
+
+                <button class="btn-dm-primary w-100 py-3" id="lung-btn" onclick="runLungAnalysis()" disabled>
+                    <i class="fa fa-dna me-2"></i>开始分类分析
+                </button>
+            </div>
+
+            <!-- 分类类别说明 -->
+            <div class="dm-card p-4 mt-4">
+                <h6 style="font-family:'Noto Serif SC',serif;color:var(--primary);margin-bottom:14px">分类类别</h6>
+                <div id="category-grid" class="category-grid">
+                    <div class="cat-item" id="cat-0" style="border-color:#52c41a">
+                        <div style="font-weight:600;color:#52c41a;margin-bottom:3px">✅ 正常</div>
+                        <div style="font-size:.75rem;color:var(--text-muted)">细胞形态正常</div>
+                    </div>
+                    <div class="cat-item" id="cat-1" style="border-color:#faad14">
+                        <div style="font-weight:600;color:#faad14;margin-bottom:3px">⚠️ 锯齿状</div>
+                        <div style="font-size:.75rem;color:var(--text-muted)">形态异常</div>
+                    </div>
+                    <div class="cat-item" id="cat-2" style="border-color:#f5222d">
+                        <div style="font-weight:600;color:#f5222d;margin-bottom:3px">🔴 腺癌</div>
+                        <div style="font-size:.75rem;color:var(--text-muted)">恶性细胞特征</div>
+                    </div>
+                    <div class="cat-item" id="cat-3" style="border-color:#fa8c16">
+                        <div style="font-weight:600;color:#fa8c16;margin-bottom:3px">🟠 腺瘤</div>
+                        <div style="font-size:.75rem;color:var(--text-muted)">良性肿瘤特征</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧结果 -->
+        <div class="col-lg-7">
+            <div class="dm-card p-4" id="result-area">
+                <h5 style="font-family:'Noto Serif SC',serif;color:var(--primary);margin-bottom:24px">
+                    <i class="fa fa-chart-pie me-2" style="color:var(--accent)"></i>分析结果
+                </h5>
+
+                <!-- 等待状态 -->
+                <div id="result-waiting" style="text-align:center;padding:60px 0">
+                    <span style="font-size:3rem;display:block;margin-bottom:16px">🧬</span>
+                    <div style="font-size:.9rem;color:var(--text-muted)">上传图像后点击"开始分类分析"</div>
+                </div>
+
+                <!-- 加载状态 -->
+                <div id="result-loading" style="display:none;text-align:center;padding:60px 0">
+                    <div class="dm-spinner mb-4"></div>
+                    <div style="font-size:.9rem;color:var(--text-muted)">MedMamba 模型正在分析中...</div>
+                </div>
+
+                <!-- 结果展示 -->
+                <div id="result-display" style="display:none">
+                    <!-- 结果圆环 -->
+                    <div id="result-circle" class="result-circle">
+                        <div id="result-emoji" style="font-size:2rem;margin-bottom:4px">✅</div>
+                        <div id="result-name" style="font-family:'Noto Serif SC',serif;font-weight:700;font-size:1.1rem;color:#333">正常</div>
+                    </div>
+
+                    <!-- 置信度 -->
+                    <div class="text-center mb-4">
+                        <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:6px">分类置信度</div>
+                        <div id="result-rate" style="font-family:'Noto Serif SC',serif;font-size:2rem;font-weight:700;color:var(--accent)">--</div>
+                        <div class="conf-bar" style="max-width:200px;margin:8px auto 0">
+                            <div class="conf-fill" id="conf-fill" style="width:0"></div>
+                        </div>
+                    </div>
+
+                    <!-- 建议提示 -->
+                    <div class="result-panel">
+                        <div style="font-weight:600;color:var(--primary);margin-bottom:8px;font-size:.9rem">
+                            <i class="fa fa-notes-medical me-2" style="color:var(--accent)"></i>分析建议
+                        </div>
+                        <div id="result-tips" style="font-size:.85rem;color:var(--text);line-height:1.7">
+                            --
+                        </div>
+                        <div style="margin-top:12px;font-size:.75rem;color:var(--text-muted)">
+                            ⚠️ 本分析结果仅供参考，不构成医学诊断建议，请咨询专业医生。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 架构说明 -->
+            <div class="dm-card p-4 mt-4" style="background:linear-gradient(135deg,#042540,#0a3d62);color:#fff">
+                <h6 style="font-family:'Noto Serif SC',serif;color:var(--accent);margin-bottom:14px">MedMamba 架构特点</h6>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;gap:10px">
+                        <span style="color:var(--accent);flex-shrink:0">▸</span>
+                        <div style="font-size:.82rem;color:rgba(255,255,255,.8);line-height:1.6">
+                            <strong style="color:#fff">状态空间模型（SSM）</strong>：线性计算复杂度，适合处理长序列医学图像
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px">
+                        <span style="color:var(--accent);flex-shrink:0">▸</span>
+                        <div style="font-size:.82rem;color:rgba(255,255,255,.8);line-height:1.6">
+                            <strong style="color:#fff">优于 Transformer</strong>：全局感受野同时保持低内存占用
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px">
+                        <span style="color:var(--accent);flex-shrink:0">▸</span>
+                        <div style="font-size:.82rem;color:rgba(255,255,255,.8);line-height:1.6">
+                            <strong style="color:#fff">医学图像优化</strong>：专为血细胞、病理切片等场景设计的视觉骨干
+                        </div>
+                    </div>
+                </div>
+                <a href="/lungkonw/" style="display:inline-block;margin-top:14px;font-size:.8rem;color:var(--accent);text-decoration:none">
+                    查看完整技术说明 →
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CATEGORY_META = {
+    0: { emoji: '✅', color: '#52c41a', bg: 'rgba(82,196,26,.08)', border: '#52c41a' },
+    1: { emoji: '⚠️', color: '#faad14', bg: 'rgba(250,173,20,.08)', border: '#faad14' },
+    2: { emoji: '🔴', color: '#f5222d', bg: 'rgba(245,34,45,.08)', border: '#f5222d' },
+    3: { emoji: '🟠', color: '#fa8c16', bg: 'rgba(250,140,22,.08)', border: '#fa8c16' },
+};
+
+function previewLung(input) {
+    if (!input.files || !input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('lung-preview').src = e.target.result;
+        document.getElementById('lung-preview-wrap').style.display = 'block';
+        const uz = document.getElementById('upload-zone');
+        uz.innerHTML = `<span class="upload-icon" style="font-size:1.4rem">✅</span><div style="font-size:.82rem;font-weight:600;color:var(--success)">${input.files[0].name}</div>`;
+        document.getElementById('lung-btn').disabled = false;
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+async function runLungAnalysis() {
+    const fileInput = document.getElementById('lung-file');
+    if (!fileInput.files || !fileInput.files[0]) return;
+
+    const btn = document.getElementById('lung-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>分析中...';
+
+    document.getElementById('result-waiting').style.display = 'none';
+    document.getElementById('result-display').style.display = 'none';
+    document.getElementById('result-loading').style.display = 'block';
+
+    try {
+        // 上传图像
+        const uploadForm = new FormData();
+        uploadForm.append('uploadImage', fileInput.files[0]);
+        await fetch('/lung/upload/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: uploadForm,
+        });
+
+        // 获取分类结果
+        const detectForm = new FormData();
+        const resp = await fetch('/lung/detect/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: detectForm,
+        });
+        const data = await resp.json();
+
+        if (!data.status) throw new Error(data.msg || '分析失败');
+
+        document.getElementById('result-loading').style.display = 'none';
+        document.getElementById('result-display').style.display = 'block';
+
+        // 更新结果圆环
+        const meta = CATEGORY_META[data.kind] || CATEGORY_META[0];
+        const circle = document.getElementById('result-circle');
+        circle.style.borderColor = meta.border;
+        circle.style.background = meta.bg;
+        circle.querySelector('::before'); // trigger repaint
+        circle.style.setProperty('--ring-color', meta.border);
+
+        document.getElementById('result-emoji').textContent = meta.emoji;
+        document.getElementById('result-name').textContent = data.name;
+        document.getElementById('result-name').style.color = meta.color;
+
+        const rateVal = Math.round(data.rate * 100);
+        document.getElementById('result-rate').textContent = rateVal + '%';
+        document.getElementById('result-rate').style.color = meta.color;
+        setTimeout(() => {
+            document.getElementById('conf-fill').style.width = rateVal + '%';
+        }, 100);
+        document.getElementById('conf-fill').style.background = `linear-gradient(90deg, ${meta.color}, ${meta.color}88)`;
+
+        document.getElementById('result-tips').textContent = data.tips;
+
+        // 高亮对应类别
+        document.querySelectorAll('.cat-item').forEach(el => el.classList.remove('active'));
+        const activeEl = document.getElementById('cat-' + data.kind);
+        if (activeEl) activeEl.classList.add('active');
+
+    } catch (err) {
+        document.getElementById('result-loading').style.display = 'none';
+        document.getElementById('result-waiting').style.display = 'block';
+        document.getElementById('result-waiting').innerHTML = `
+            <span style="font-size:2.5rem;display:block;margin-bottom:12px">❌</span>
+            <div style="font-size:.88rem;color:var(--danger)">${err.message}</div>
+        `;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa fa-dna me-2"></i>重新分析';
+}
+
+function getCookie(name) {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta && name === 'csrftoken') return meta.getAttribute('content');
+    for (let c of document.cookie.split(';')) {
+        const [k,v] = c.trim().split('=');
+        if (k === name) return decodeURIComponent(v);
+    }
+    return '';
+}
+</script>
+{% endblock %}

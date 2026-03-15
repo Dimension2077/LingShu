@@ -1,0 +1,115 @@
+{% extends 'app01/base.html' %}
+{% load static %}
+
+{% block title %}健康小妙招 · LingShu-AI{% endblock %}
+
+{% block content %}
+<div class="container" style="padding:40px 0">
+    <div class="text-center mb-5">
+        <div class="section-divider mx-auto"></div>
+        <h1 class="section-title">健康小妙招</h1>
+        <p class="section-sub">按关键词搜索健康自我管理技巧</p>
+    </div>
+
+    <!-- 搜索区 -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-6">
+            <div class="dm-card p-4">
+                <div style="display:flex;gap:10px;margin-bottom:14px">
+                    <input type="text" id="keyword-input" class="form-control" placeholder="输入关键词，如：失眠、颈椎、减肥..."
+                        style="border-radius:8px;border-color:var(--border);font-family:var(--font-sans)"
+                        onkeydown="if(event.key==='Enter')searchSkills()">
+                    <button class="btn-dm-primary" style="white-space:nowrap" onclick="searchSkills()">
+                        <i class="fa fa-search me-1"></i>搜索
+                    </button>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    {% for kw in kw_list %}
+                    <span onclick="searchByKw('{{ kw }}')"
+                        style="font-size:.77rem;padding:3px 12px;border-radius:14px;background:rgba(0,180,216,.08);color:var(--accent);border:1px solid rgba(0,180,216,.25);cursor:pointer;transition:all .15s"
+                        onmouseover="this.style.background='var(--accent)';this.style.color='#fff'"
+                        onmouseout="this.style.background='rgba(0,180,216,.08)';this.style.color='var(--accent)'">
+                        {{ kw }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果列表 -->
+    <div id="skills-loading" style="text-align:center;padding:40px">
+        <div class="dm-spinner mb-3"></div>
+        <div style="font-size:.88rem;color:var(--text-muted)">加载妙招库...</div>
+    </div>
+
+    <div id="skills-container" style="display:none"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function searchByKw(kw) {
+    document.getElementById('keyword-input').value = kw;
+    searchSkills();
+}
+
+async function searchSkills() {
+    const keyword = document.getElementById('keyword-input').value.trim();
+    document.getElementById('skills-loading').style.display = 'block';
+    document.getElementById('skills-container').style.display = 'none';
+
+    try {
+        const formData = new FormData();
+        formData.append('keyword', keyword);
+
+        const resp = await fetch('/tips/data/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData,
+        });
+        const data = await resp.json();
+
+        document.getElementById('skills-loading').style.display = 'none';
+
+        if (data.code === 200 && data.result) {
+            const items = Array.isArray(data.result) ? data.result : Object.values(data.result);
+            const container = document.getElementById('skills-container');
+            container.innerHTML = `
+                <div class="row g-4">
+                    ${items.map((item, i) => `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="dm-card p-4" style="height:100%;border-top:3px solid var(--accent)">
+                                <div style="display:flex;gap:10px;margin-bottom:12px;align-items:flex-start">
+                                    <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--primary));color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0">${i+1}</div>
+                                    <div style="font-weight:600;font-size:.9rem;color:var(--primary)">${item.title || '健康妙招'}</div>
+                                </div>
+                                <div style="font-size:.83rem;color:var(--text-muted);line-height:1.8">${item.content || ''}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            container.style.display = 'block';
+        }
+    } catch (err) {
+        document.getElementById('skills-loading').style.display = 'none';
+        document.getElementById('skills-container').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">暂无相关妙招</div>';
+        document.getElementById('skills-container').style.display = 'block';
+    }
+}
+
+function getCookie(name) {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta && name === 'csrftoken') return meta.getAttribute('content');
+    for (let c of document.cookie.split(';')) {
+        const [k,v] = c.trim().split('=');
+        if (k === name) return decodeURIComponent(v);
+    }
+    return '';
+}
+
+// 默认加载
+searchSkills();
+</script>
+{% endblock %}

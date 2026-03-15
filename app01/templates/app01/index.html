@@ -1,0 +1,855 @@
+{% extends 'app01/base.html' %}
+{% load static %}
+
+{% block title %}灵枢智医 · LingShu AI 智慧医疗平台 · 首页{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ===== 首页专属样式 ===== */
+
+/* 顶部 Hero 区 */
+.hero-section {
+    background: linear-gradient(135deg, #042540 0%, #0a3d62 45%, #103e6e 100%);
+    min-height: 88vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 80px 0;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+        radial-gradient(ellipse 60% 80% at 70% 50%, rgba(0,180,216,.18) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 10% 80%, rgba(72,202,228,.10) 0%, transparent 60%);
+}
+
+/* 网格装饰 */
+.hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(0,180,216,.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,180,216,.07) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,180,216,.15);
+    border: 1px solid rgba(0,180,216,.35);
+    border-radius: 24px;
+    padding: 5px 16px;
+    font-size: .78rem;
+    color: var(--accent);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+.hero-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(2.2rem, 4vw, 3.2rem);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.25;
+    margin-bottom: 20px;
+    letter-spacing: .02em;
+}
+
+.hero-title .accent-word {
+    color: var(--accent);
+    position: relative;
+    display: inline-block;
+}
+
+.hero-desc {
+    color: rgba(255,255,255,.72);
+    font-size: 1rem;
+    line-height: 1.8;
+    max-width: 520px;
+    margin-bottom: 36px;
+    font-weight: 300;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.hero-btn-primary {
+    background: linear-gradient(135deg, #00b4d8, #0096c7);
+    color: #fff;
+    padding: 13px 32px;
+    border-radius: 10px;
+    font-size: .95rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all .25s;
+    box-shadow: 0 4px 20px rgba(0,180,216,.35);
+}
+
+.hero-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0,180,216,.45);
+    color: #fff;
+}
+
+.hero-btn-secondary {
+    color: rgba(255,255,255,.85);
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: .9rem;
+    border: 1px solid rgba(255,255,255,.25);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all .25s;
+    background: transparent;
+}
+
+.hero-btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,180,216,.08);
+}
+
+/* 统计数字区 */
+.hero-stats {
+    display: flex;
+    gap: 36px;
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid rgba(255,255,255,.12);
+}
+
+.hero-stat-item {
+    text-align: center;
+}
+
+.hero-stat-num {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.hero-stat-label {
+    font-size: .75rem;
+    color: rgba(255,255,255,.55);
+    letter-spacing: .05em;
+}
+
+/* 右侧图像区 */
+.hero-visual {
+    position: relative;
+}
+
+.hero-img-main {
+    width: 100%;
+    max-width: 520px;
+    border-radius: 20px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.4);
+    border: 1px solid rgba(0,180,216,.25);
+    display: block;
+    margin: 0 auto;
+}
+
+.hero-float-card {
+    position: absolute;
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(12px);
+    border-radius: 12px;
+    padding: 12px 18px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.15);
+    font-size: .82rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+    animation: floatY 3s ease-in-out infinite;
+}
+
+.hero-float-card.card1 { top: 12%; right: -5%; animation-delay: 0s; }
+.hero-float-card.card2 { bottom: 18%; left: -8%; animation-delay: 1.5s; }
+
+@keyframes floatY {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.float-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.fi-blue { background: rgba(0,180,216,.15); color: var(--accent); }
+.fi-green { background: rgba(39,174,96,.15); color: #27ae60; }
+
+/* ===== 功能模块区 ===== */
+.features-section {
+    padding: 80px 0;
+    background: var(--bg);
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.feature-card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: all .25s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--card-from), var(--card-to));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .3s;
+}
+
+.feature-card:hover::before {
+    transform: scaleX(1);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 48px rgba(10,61,98,.14);
+    color: inherit;
+}
+
+.feature-icon-wrap {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 18px;
+    flex-shrink: 0;
+}
+
+.feature-card-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.feature-card-desc {
+    font-size: .84rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 16px;
+}
+
+.feature-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.feature-tag {
+    font-size: .7rem;
+    padding: 2px 9px;
+    border-radius: 12px;
+    background: rgba(0,180,216,.08);
+    color: var(--accent);
+    border: 1px solid rgba(0,180,216,.2);
+}
+
+.feature-arrow {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    color: var(--accent);
+    opacity: 0;
+    transition: all .2s;
+    font-size: 1.1rem;
+}
+
+.feature-card:hover .feature-arrow {
+    opacity: 1;
+    transform: translateX(4px);
+}
+
+/* ===== 健康贴士区 ===== */
+.tips-section {
+    padding: 80px 0;
+    background: linear-gradient(180deg, #e8f4fd 0%, var(--bg) 100%);
+}
+
+.tip-item {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    transition: all .2s;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.tip-item:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 20px rgba(0,180,216,.1);
+}
+
+.tip-num {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--accent), var(--primary));
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* ===== 团队区 ===== */
+.team-section {
+    padding: 80px 0;
+    background: var(--bg);
+}
+
+.team-card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: all .2s;
+}
+
+.team-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.team-avatar {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    margin: 0 auto 14px;
+    color: #fff;
+}
+
+.team-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 4px;
+}
+
+.team-role {
+    font-size: .8rem;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+/* 悬浮粒子装饰（纯 CSS） */
+.hero-particle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(0,180,216,.25);
+    animation: particleFloat linear infinite;
+    pointer-events: none;
+}
+
+@keyframes particleFloat {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: .5; }
+    100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ===== HERO 区 ===== -->
+<section class="hero-section">
+    <div class="hero-grid"></div>
+
+    <!-- 粒子装饰 -->
+    <div class="hero-particle" style="width:6px;height:6px;left:15%;animation-duration:8s;animation-delay:0s;"></div>
+    <div class="hero-particle" style="width:4px;height:4px;left:35%;animation-duration:12s;animation-delay:2s;"></div>
+    <div class="hero-particle" style="width:8px;height:8px;left:55%;animation-duration:10s;animation-delay:4s;"></div>
+    <div class="hero-particle" style="width:5px;height:5px;left:75%;animation-duration:9s;animation-delay:1s;"></div>
+    <div class="hero-particle" style="width:3px;height:3px;left:90%;animation-duration:14s;animation-delay:3s;"></div>
+
+    <div class="container hero-content">
+        <div class="row align-items-center g-5">
+            <!-- 左侧文字 -->
+            <div class="col-lg-6">
+                <div class="hero-eyebrow">
+                    <span>⬡</span>
+                    <span>灵枢智医 · LingShu AI</span>
+                </div>
+                <h1 class="hero-title">
+                    智慧医疗的<br>
+                    <span class="accent-word">新一代平台</span>
+                </h1>
+                <p class="hero-desc">
+                    融合 AI 问诊、医学影像分析、疾病大数据可视化与健康科普于一体。
+                    让每一位用户都能便捷获取专业医疗辅助，让每一张图像都能说话。
+                </p>
+                <div class="hero-actions">
+                    <a href="/agent/" class="hero-btn-primary">
+                        <i class="fa fa-stethoscope"></i> 立即体验 AI 问诊
+                    </a>
+                    <a href="/screen/" class="hero-btn-secondary">
+                        <i class="fa fa-chart-bar"></i> 疾病大数据大屏
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat-item">
+                        <span class="hero-stat-num">4+</span>
+                        <span class="hero-stat-label">AI 能力模块</span>
+                    </div>
+                    <div class="hero-stat-item">
+                        <span class="hero-stat-num">YOLO</span>
+                        <span class="hero-stat-label">目标检测引擎</span>
+                    </div>
+                    <div class="hero-stat-item">
+                        <span class="hero-stat-num">Qwen-Max</span>
+                        <span class="hero-stat-label">大语言模型</span>
+                    </div>
+                    <div class="hero-stat-item">
+                        <span class="hero-stat-num">Mamba</span>
+                        <span class="hero-stat-label">图像分类架构</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧视觉 -->
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="hero-visual">
+                    <!-- 医疗 AI 主图（SVG 示意） -->
+                    <svg class="hero-img-main" viewBox="0 0 520 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="520" height="380" rx="20" fill="#0d3a5c"/>
+                        <!-- 背景网格 -->
+                        <defs>
+                            <pattern id="g" width="30" height="30" patternUnits="userSpaceOnUse">
+                                <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(0,180,216,0.12)" stroke-width="0.5"/>
+                            </pattern>
+                        </defs>
+                        <rect width="520" height="380" fill="url(#g)"/>
+                        <!-- 中央 DNA 双螺旋示意 -->
+                        <g transform="translate(260,190)">
+                            <ellipse cx="0" cy="0" rx="90" ry="90" fill="rgba(0,180,216,0.08)" stroke="rgba(0,180,216,0.3)" stroke-width="1"/>
+                            <ellipse cx="0" cy="0" rx="60" ry="60" fill="rgba(0,180,216,0.1)" stroke="rgba(0,180,216,0.4)" stroke-width="1"/>
+                            <circle cx="0" cy="0" r="32" fill="rgba(0,180,216,0.15)" stroke="#00b4d8" stroke-width="1.5"/>
+                            <!-- 十字医疗图标 -->
+                            <rect x="-5" y="-18" width="10" height="36" rx="5" fill="#00b4d8"/>
+                            <rect x="-18" y="-5" width="36" height="10" rx="5" fill="#00b4d8"/>
+                        </g>
+                        <!-- 连线节点 -->
+                        <circle cx="120" cy="100" r="8" fill="#00b4d8" opacity="0.7"/>
+                        <circle cx="400" cy="80" r="6" fill="#48cae4" opacity="0.6"/>
+                        <circle cx="80" cy="280" r="7" fill="#00b4d8" opacity="0.5"/>
+                        <circle cx="430" cy="300" r="9" fill="#48cae4" opacity="0.7"/>
+                        <line x1="120" y1="100" x2="170" y2="140" stroke="rgba(0,180,216,0.3)" stroke-width="1" stroke-dasharray="4,4"/>
+                        <line x1="400" y1="80" x2="340" y2="130" stroke="rgba(0,180,216,0.3)" stroke-width="1" stroke-dasharray="4,4"/>
+                        <line x1="80" y1="280" x2="170" y2="250" stroke="rgba(0,180,216,0.3)" stroke-width="1" stroke-dasharray="4,4"/>
+                        <line x1="430" y1="300" x2="350" y2="250" stroke="rgba(0,180,216,0.3)" stroke-width="1" stroke-dasharray="4,4"/>
+                        <!-- 标签文字 -->
+                        <text x="30" y="96" fill="rgba(0,180,216,0.8)" font-size="11" font-family="monospace">AI问诊</text>
+                        <text x="360" y="75" fill="rgba(72,202,228,0.8)" font-size="11" font-family="monospace">图像分析</text>
+                        <text x="20" y="300" fill="rgba(0,180,216,0.8)" font-size="11" font-family="monospace">健康教育</text>
+                        <text x="395" y="318" fill="rgba(72,202,228,0.8)" font-size="11" font-family="monospace">数据可视化</text>
+                    </svg>
+
+                    <!-- 浮动卡片1 -->
+                    <div class="hero-float-card card1">
+                        <div class="float-icon fi-blue"><i class="fa fa-brain"></i></div>
+                        <div>
+                            <div style="font-weight:600;font-size:.82rem;color:#0a3d62">AI 诊断建议已生成</div>
+                            <div style="font-size:.73rem;color:#5a7080">3项可能病因 · 4条健康建议</div>
+                        </div>
+                    </div>
+
+                    <!-- 浮动卡片2 -->
+                    <div class="hero-float-card card2">
+                        <div class="float-icon fi-green"><i class="fa fa-microscope"></i></div>
+                        <div>
+                            <div style="font-weight:600;font-size:.82rem;color:#0a3d62">检测置信度 93.2%</div>
+                            <div style="font-size:.73rem;color:#5a7080">MedMamba · 血细胞分类</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===== 功能模块区 ===== -->
+<section class="features-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="section-divider mx-auto"></div>
+            <h2 class="section-title">平台核心功能</h2>
+            <p class="section-sub">四条技术主线，构建全方位智慧医疗辅助能力</p>
+        </div>
+
+        <div class="feature-grid">
+
+            <!-- AI 问诊 -->
+            <a href="/agent/" class="feature-card" style="--card-from:#00b4d8;--card-to:#0a3d62">
+                <div class="feature-icon-wrap" style="background:rgba(0,180,216,.1)">
+                    <span style="color:#00b4d8">🩺</span>
+                </div>
+                <div class="feature-card-title">Qwen-Max AI 问诊</div>
+                <div class="feature-card-desc">
+                    基于 Qwen-Max 大语言模型 + 医疗知识库检索增强，提供结构化「可能病因 / 建议检查 / 健康建议」输出，支持多轮对话记忆。
+                </div>
+                <div class="feature-tags">
+                    <span class="feature-tag">LangChain</span>
+                    <span class="feature-tag">知识库增强</span>
+                    <span class="feature-tag">多轮对话</span>
+                </div>
+                <div class="feature-arrow">→</div>
+            </a>
+
+            <!-- YOLO 检测 -->
+            <a href="/mask/" class="feature-card" style="--card-from:#9b59b6;--card-to:#3498db">
+                <div class="feature-icon-wrap" style="background:rgba(155,89,182,.1)">
+                    <span style="color:#9b59b6">🔬</span>
+                </div>
+                <div class="feature-card-title">YOLO 血细胞检测</div>
+                <div class="feature-card-desc">
+                    上传血液显微图像，调用本地 YOLO 目标检测模型完成推理，实时返回带检测框与类别标注的结果图。
+                </div>
+                <div class="feature-tags">
+                    <span class="feature-tag">YOLOv5</span>
+                    <span class="feature-tag">目标检测</span>
+                    <span class="feature-tag">实时推理</span>
+                </div>
+                <div class="feature-arrow">→</div>
+            </a>
+
+            <!-- Agent 零样本 -->
+            <a href="/cell/" class="feature-card" style="--card-from:#e74c3c;--card-to:#f39c12">
+                <div class="feature-icon-wrap" style="background:rgba(231,76,60,.1)">
+                    <span style="color:#e74c3c">🤖</span>
+                </div>
+                <div class="feature-card-title">Agent 零样本检测</div>
+                <div class="feature-card-desc">
+                    通过自然语言提示词驱动远程 Agentic 视觉模型，实现对任意医学图像的零样本目标定位与标注。
+                </div>
+                <div class="feature-tags">
+                    <span class="feature-tag">零样本</span>
+                    <span class="feature-tag">提示词驱动</span>
+                    <span class="feature-tag">视觉Agent</span>
+                </div>
+                <div class="feature-arrow">→</div>
+            </a>
+
+            <!-- MedMamba 分类 -->
+            <a href="/lung/" class="feature-card" style="--card-from:#27ae60;--card-to:#00b4d8">
+                <div class="feature-icon-wrap" style="background:rgba(39,174,96,.1)">
+                    <span style="color:#27ae60">🧬</span>
+                </div>
+                <div class="feature-card-title">MedMamba 血细胞分析</div>
+                <div class="feature-card-desc">
+                    基于 MedMamba（状态空间模型+视觉骨干）架构的血细胞图像分类，输出类别置信度与健康提示。
+                </div>
+                <div class="feature-tags">
+                    <span class="feature-tag">MedMamba</span>
+                    <span class="feature-tag">图像分类</span>
+                    <span class="feature-tag">SSM架构</span>
+                </div>
+                <div class="feature-arrow">→</div>
+            </a>
+
+            <!-- 大数据大屏 -->
+            <a href="/screen/" class="feature-card" style="--card-from:#1abc9c;--card-to:#3498db">
+                <div class="feature-icon-wrap" style="background:rgba(26,188,156,.1)">
+                    <span style="color:#1abc9c">📊</span>
+                </div>
+                <div class="feature-card-title">疾病大数据可视化</div>
+                <div class="feature-card-desc">
+                    ECharts 驱动的疾病数据大屏，展示时序趋势、区域分布、病种占比等多维度数据指标可视化。
+                </div>
+                <div class="feature-tags">
+                    <span class="feature-tag">ECharts</span>
+                    <span class="feature-tag">大屏可视化</span>
+                    <span class="feature-tag">地图热力</span>
+                </div>
+                <div class="feature-arrow">→</div>
+            </a>
+
+            <!-- 健康教育 -->
+            <a href="/health/" class="feature-card" style="--card-from:#f39c12;--card-to:#e74c3c">
+                <div class="feature-icon-wrap" style="background:rgba(243,156,18,.1)">
+                    <span style="color:#f39c12">💊</span>
+                </div>
+                <div class="feature-card-title">医智健康贴士中心</div>
+                <div class="feature-card-desc">
+                    接入Qwen-Max + 高德地图专业 API，提供药品科普查询、健康小贴士、健康妙招及城市空气质量指数。
+                </div>
+                <div class="feature-tags">
+                    <span class="feature-tag">药品科普</span>
+                    <span class="feature-tag">健康贴士</span>
+                    <span class="feature-tag">AQI监测</span>
+                </div>
+                <div class="feature-arrow">→</div>
+            </a>
+
+        </div>
+    </div>
+</section>
+
+
+<!-- ===== 健康小贴士区 ===== -->
+<section class="tips-section">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-4">
+                <div class="section-divider"></div>
+                <h2 class="section-title">医智健康贴士</h2>
+                <p class="section-sub">来自专业健康数据平台的日常健康建议</p>
+                <a href="/health/" class="btn-dm-accent text-decoration-none d-inline-block">
+                    查看全部贴士 →
+                </a>
+            </div>
+            <div class="col-lg-8">
+                <div id="tips-list">
+                    <div class="tip-item">
+                        <div class="tip-num">1</div>
+                        <div>
+                            <div style="font-weight:600;font-size:.9rem;color:#0a3d62;margin-bottom:4px">每天喝够8杯水</div>
+                            <div style="font-size:.83rem;color:#5a7080;line-height:1.6">保持充足的水分摄入，有助于促进新陈代谢，保持皮肤水润健康，改善体内废物代谢。</div>
+                        </div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-num">2</div>
+                        <div>
+                            <div style="font-weight:600;font-size:.9rem;color:#0a3d62;margin-bottom:4px">规律作息，早睡早起</div>
+                            <div style="font-size:.83rem;color:#5a7080;line-height:1.6">保持规律的作息时间，成年人每天需要7-9小时的高质量睡眠，避免熬夜损伤免疫力。</div>
+                        </div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-num">3</div>
+                        <div>
+                            <div style="font-weight:600;font-size:.9rem;color:#0a3d62;margin-bottom:4px">适量运动，强健体魄</div>
+                            <div style="font-size:.83rem;color:#5a7080;line-height:1.6">每周至少150分钟中等强度有氧运动，如快走、游泳、骑自行车，有助于心肺健康。</div>
+                        </div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-num">4</div>
+                        <div>
+                            <div style="font-weight:600;font-size:.9rem;color:#0a3d62;margin-bottom:4px">定期体检，防患未然</div>
+                            <div style="font-size:.83rem;color:#5a7080;line-height:1.6">成年人每年进行一次全面体检，及时发现潜在健康问题，做到早发现早治疗。</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===== 技术架构展示 ===== -->
+<section style="padding:80px 0; background:#fff;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="section-divider mx-auto"></div>
+            <h2 class="section-title">技术架构</h2>
+            <p class="section-sub">多种 AI 能力在统一 Django 平台汇聚</p>
+        </div>
+        <div class="row g-4 text-center">
+            <div class="col-md-3 col-6">
+                <div class="dm-card p-4">
+                    <div style="font-size:2rem;margin-bottom:10px">🏗️</div>
+                    <div style="font-weight:600;color:var(--primary);margin-bottom:4px">Django 后端</div>
+                    <div style="font-size:.8rem;color:var(--text-muted)">统一路由管理<br>RESTful 接口</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="dm-card p-4">
+                    <div style="font-size:2rem;margin-bottom:10px">🤖</div>
+                    <div style="font-weight:600;color:var(--primary);margin-bottom:4px">Qwen-Max LLM</div>
+                    <div style="font-size:.8rem;color:var(--text-muted)">LangChain 封装<br>知识库增强</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="dm-card p-4">
+                    <div style="font-size:2rem;margin-bottom:10px">🔍</div>
+                    <div style="font-weight:600;color:var(--primary);margin-bottom:4px">YOLO + Mamba</div>
+                    <div style="font-size:.8rem;color:var(--text-muted)">本地模型推理<br>图像分析</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="dm-card p-4">
+                    <div style="font-size:2rem;margin-bottom:10px">📡</div>
+                    <div style="font-weight:600;color:var(--primary);margin-bottom:4px">Qwen-Max + 高德地图 API</div>
+                    <div style="font-size:.8rem;color:var(--text-muted)">药品 · 健康 · AQI<br>专业数据接入</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- ===== 科研团队 ===== -->
+<section class="team-section" id="team">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="section-divider mx-auto"></div>
+            <h2 class="section-title">团队介绍</h2>
+            <p class="section-sub">灵枢智医 · LingShu AI 核心开发团队</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+
+            <!-- 项目负责人 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="team-card" style="padding:2rem 1.5rem;text-align:center">
+                    <div style="position:relative;display:inline-block;margin-bottom:1rem">
+                        <img src="{% static 'app01/img/avatar1.jpg' %}"
+                             alt="项目负责人头像"
+                             style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);box-shadow:0 4px 16px rgba(0,168,168,.2);"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <div style="display:none;width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--primary));color:#fff;font-size:2rem;align-items:center;justify-content:center;border:3px solid var(--accent)">👤</div>
+                        <div style="position:absolute;bottom:4px;right:4px;width:20px;height:20px;background:#28a745;border-radius:50%;border:2px solid #fff"></div>
+                    </div>
+                    <div style="font-size:1.1rem;font-weight:700;color:var(--primary);margin-bottom:4px">党玮捷</div>
+                    <div style="font-size:.85rem;color:var(--accent);font-weight:600;margin-bottom:10px">项目负责人</div>
+                    <div style="font-size:.8rem;color:var(--text-muted);line-height:1.7;margin-bottom:14px">
+                        负责项目整体规划与推进，协调各模块开发进度，把控产品方向与最终交付质量。
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+                        <span class="dm-badge dm-badge-blue">项目管理</span>
+                        <span class="dm-badge dm-badge-green">需求分析</span>
+                        <span class="dm-badge dm-badge-orange">团队协作</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 框架搭建 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="team-card" style="padding:2rem 1.5rem;text-align:center">
+                    <div style="position:relative;display:inline-block;margin-bottom:1rem">
+                        <img src="{% static 'app01/img/avatar2.jpg' %}"
+                             alt="框架搭建头像"
+                             style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);box-shadow:0 4px 16px rgba(0,168,168,.2);"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <div style="display:none;width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--primary));color:#fff;font-size:2rem;align-items:center;justify-content:center;border:3px solid var(--accent)">👤</div>
+                        <div style="position:absolute;bottom:4px;right:4px;width:20px;height:20px;background:#28a745;border-radius:50%;border:2px solid #fff"></div>
+                    </div>
+                    <div style="font-size:1.1rem;font-weight:700;color:var(--primary);margin-bottom:4px">朱帅龙</div>
+                    <div style="font-size:.85rem;color:var(--accent);font-weight:600;margin-bottom:10px">框架搭建</div>
+                    <div style="font-size:.8rem;color:var(--text-muted);line-height:1.7;margin-bottom:14px">
+                        负责 Django 后端架构设计与 AI 模型集成，搭建平台核心功能模块及 API 接口体系。
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+                        <span class="dm-badge dm-badge-blue">Django</span>
+                        <span class="dm-badge dm-badge-green">LangChain</span>
+                        <span class="dm-badge dm-badge-orange">YOLOv5</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据采集 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="team-card" style="padding:2rem 1.5rem;text-align:center">
+                    <div style="position:relative;display:inline-block;margin-bottom:1rem">
+                        <img src="{% static 'app01/img/avatar3.jpg' %}"
+                             alt="数据采集头像"
+                             style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);box-shadow:0 4px 16px rgba(0,168,168,.2);"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <div style="display:none;width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--primary));color:#fff;font-size:2rem;align-items:center;justify-content:center;border:3px solid var(--accent)"></div>
+                        <div style="position:absolute;bottom:4px;right:4px;width:20px;height:20px;background:#28a745;border-radius:50%;border:2px solid #fff"></div>
+                    </div>
+                    <div style="font-size:1.1rem;font-weight:700;color:var(--primary);margin-bottom:4px">谭昕毅</div>
+                    <div style="font-size:.85rem;color:var(--accent);font-weight:600;margin-bottom:10px">数据采集</div>
+                    <div style="font-size:.8rem;color:var(--text-muted);line-height:1.7;margin-bottom:14px">
+                        负责医疗数据集收集与预处理，构建训练数据管道，支撑平台各 AI 模型的训练与评估。
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+                        <span class="dm-badge dm-badge-blue">Python</span>
+                        <span class="dm-badge dm-badge-green">数据清洗</span>
+                        <span class="dm-badge dm-badge-orange">ECharts</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 从后端拉取健康小贴士（如 API key 已配置）
+fetch('/get_tips/')
+    .then(r => r.json())
+    .then(data => {
+        if (data.code === 200 && data.result && data.result.length > 0) {
+            const list = document.getElementById('tips-list');
+            const tips = data.result.slice(0, 4);
+            list.innerHTML = tips.map((t, i) => `
+                <div class="tip-item">
+                    <div class="tip-num">${i+1}</div>
+                    <div>
+                        <div style="font-weight:600;font-size:.9rem;color:#0a3d62;margin-bottom:4px">
+                            ${t.title || t.content?.substring(0,20) || '健康建议'}
+                        </div>
+                        <div style="font-size:.83rem;color:#5a7080;line-height:1.6">
+                            ${t.content || t.title || ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    })
+    .catch(() => {}); // 静默失败，保留默认内容
+</script>
+{% endblock %}

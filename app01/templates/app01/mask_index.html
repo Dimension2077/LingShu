@@ -1,0 +1,327 @@
+{% extends 'app01/base.html' %}
+{% load static %}
+
+{% block title %}血细胞检测 · YOLO · LingShu-AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.detect-page { padding: 40px 0; }
+
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.detect-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.img-card {
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.img-card-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: .88rem;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.img-display {
+    width: 100%;
+    min-height: 300px;
+    max-height: 400px;
+    object-fit: contain;
+    display: block;
+    background: #f8fbff;
+}
+
+.img-placeholder {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    background: #f8fbff;
+}
+
+.control-panel {
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 28px;
+}
+
+.progress-bar-wrap {
+    background: #e8f0f8;
+    border-radius: 8px;
+    height: 6px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--primary));
+    border-radius: 8px;
+    transition: width .5s ease;
+    width: 0;
+}
+
+@media (max-width: 768px) {
+    .detect-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container detect-page">
+    <div class="page-header">
+        <div class="section-divider mx-auto"></div>
+        <h1 class="section-title">YOLO 血细胞目标检测</h1>
+        <p class="section-sub">上传血液显微图像，AI 自动识别并标注细胞类别与位置</p>
+        <span class="dm-badge dm-badge-blue">YOLOv5</span>
+        <span class="dm-badge dm-badge-green ms-2">目标检测</span>
+    </div>
+
+    <!-- 操作面板 -->
+    <div class="control-panel mb-4">
+        <div class="row g-4 align-items-end">
+            <div class="col-md-8">
+                <label style="font-weight:600;color:var(--primary);margin-bottom:10px;display:block">
+                    <i class="fa fa-upload me-2" style="color:var(--accent)"></i>选择血液显微图像
+                </label>
+                <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+                    <span class="upload-icon">🔬</span>
+                    <div style="font-size:.9rem;font-weight:500;color:var(--text)">点击或拖拽上传图像</div>
+                    <div style="font-size:.78rem;color:var(--text-muted);margin-top:6px">支持 JPG / PNG / BMP 格式</div>
+                </div>
+                <input type="file" id="file-input" accept="image/*" style="display:none" onchange="previewImage(this)">
+                <div id="progress-wrap" style="display:none">
+                    <div style="font-size:.8rem;color:var(--text-muted);margin-top:8px" id="progress-text">正在上传...</div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <button class="btn-dm-primary w-100 py-3" id="detect-btn" onclick="runDetection()" disabled>
+                    <i class="fa fa-search me-2"></i>开始检测
+                </button>
+                <div style="font-size:.75rem;color:var(--text-muted);text-align:center;margin-top:8px">
+                    检测过程约 2~5 秒
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图像对比区 -->
+    <div class="detect-grid">
+        <div class="img-card">
+            <div class="img-card-header">
+                <span>📷</span> 原始图像
+            </div>
+            <div id="original-wrap">
+                <div class="img-placeholder">
+                    <span style="font-size:2.5rem;margin-bottom:10px">🩸</span>
+                    <div style="font-size:.88rem">请先上传血液显微图像</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="img-card">
+            <div class="img-card-header">
+                <span>🎯</span> 检测结果
+                <span id="result-badge" class="dm-badge dm-badge-green ms-auto" style="display:none">检测完成</span>
+            </div>
+            <div id="result-wrap">
+                <div class="img-placeholder" id="result-placeholder">
+                    <div id="result-spinner" style="display:none">
+                        <div class="dm-spinner mb-3"></div>
+                        <div style="font-size:.83rem;color:var(--text-muted)">AI 正在分析图像...</div>
+                    </div>
+                    <div id="result-empty">
+                        <span style="font-size:2.5rem;margin-bottom:10px;display:block">⏳</span>
+                        <div style="font-size:.88rem">等待检测完成</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用说明 -->
+    <div class="dm-card p-4">
+        <h5 style="font-family:'Noto Serif SC',serif;color:var(--primary);margin-bottom:16px">
+            <i class="fa fa-info-circle me-2" style="color:var(--accent)"></i>检测说明
+        </h5>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div style="display:flex;gap:10px">
+                    <span style="font-size:1.2rem;flex-shrink:0">①</span>
+                    <div>
+                        <div style="font-weight:600;font-size:.88rem;color:var(--primary)">上传图像</div>
+                        <div style="font-size:.8rem;color:var(--text-muted);line-height:1.6">选择清晰的血液显微镜图像，建议分辨率 ≥ 640×640</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div style="display:flex;gap:10px">
+                    <span style="font-size:1.2rem;flex-shrink:0">②</span>
+                    <div>
+                        <div style="font-weight:600;font-size:.88rem;color:var(--primary)">AI 推理</div>
+                        <div style="font-size:.8rem;color:var(--text-muted);line-height:1.6">YOLO 模型自动识别图中每个血细胞位置与类型</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div style="display:flex;gap:10px">
+                    <span style="font-size:1.2rem;flex-shrink:0">③</span>
+                    <div>
+                        <div style="font-weight:600;font-size:.88rem;color:var(--primary)">查看结果</div>
+                        <div style="font-size:.8rem;color:var(--text-muted);line-height:1.6">检测框与类别标签叠加展示，直观呈现分析结果</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let fileSelected = false;
+const detectBtn = document.getElementById('detect-btn');
+const fileInput = document.getElementById('file-input');
+const uploadZone = document.getElementById('upload-zone');
+
+// 拖拽上传
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        previewImage(fileInput);
+    }
+});
+
+function previewImage(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = e => {
+        const wrap = document.getElementById('original-wrap');
+        wrap.innerHTML = `<img src="${e.target.result}" class="img-display" alt="原始图像">`;
+        uploadZone.innerHTML = `
+            <span class="upload-icon" style="font-size:1.5rem">✅</span>
+            <div style="font-size:.88rem;font-weight:600;color:var(--success)">${file.name}</div>
+            <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">点击重新选择</div>
+        `;
+        fileSelected = true;
+        detectBtn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+}
+
+async function runDetection() {
+    if (!fileSelected || !fileInput.files[0]) return;
+
+    detectBtn.disabled = true;
+    detectBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>检测中...';
+
+    // 显示加载
+    document.getElementById('result-empty').style.display = 'none';
+    document.getElementById('result-spinner').style.display = 'flex';
+    document.getElementById('result-spinner').style.flexDirection = 'column';
+    document.getElementById('result-spinner').style.alignItems = 'center';
+
+    // 进度条
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    progressWrap.style.display = 'block';
+    progressBar.style.width = '0';
+    progressText.textContent = '正在上传图像...';
+
+    // 动画进度
+    let prog = 0;
+    const progInterval = setInterval(() => {
+        prog = Math.min(prog + Math.random() * 15, 85);
+        progressBar.style.width = prog + '%';
+    }, 300);
+
+    try {
+        // 上传图像
+        const formData = new FormData();
+        formData.append('uploadImage', fileInput.files[0]);
+
+        const uploadResp = await fetch('/mask/upload/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData,
+        });
+        const uploadData = await uploadResp.json();
+
+        if (!uploadData.status) throw new Error(uploadData.msg || '上传失败');
+
+        progressText.textContent = 'YOLO 推理中...';
+        progressBar.style.width = '90%';
+
+        // 获取结果图
+        const imgResp = await fetch('/mask/img/', { headers: { 'X-CSRFToken': getCookie('csrftoken') } });
+        const imgData = await imgResp.json();
+
+        clearInterval(progInterval);
+        progressBar.style.width = '100%';
+        progressText.textContent = '检测完成！';
+
+        document.getElementById('result-spinner').style.display = 'none';
+
+        if (imgData.status && imgData.image) {
+            const wrap = document.getElementById('result-wrap');
+            wrap.innerHTML = `<img src="${imgData.image}" class="img-display" alt="检测结果">`;
+            document.getElementById('result-badge').style.display = 'inline-block';
+        } else {
+            throw new Error('获取结果图失败');
+        }
+
+    } catch (err) {
+        clearInterval(progInterval);
+        document.getElementById('result-spinner').style.display = 'none';
+        document.getElementById('result-empty').style.display = 'block';
+        document.getElementById('result-empty').innerHTML = `
+            <span style="font-size:2rem;display:block;margin-bottom:8px">❌</span>
+            <div style="font-size:.85rem;color:var(--danger)">${err.message}</div>
+        `;
+        progressText.textContent = '检测失败：' + err.message;
+    }
+
+    detectBtn.disabled = false;
+    detectBtn.innerHTML = '<i class="fa fa-search me-2"></i>重新检测';
+}
+
+function getCookie(name) {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta && name === 'csrftoken') return meta.getAttribute('content');
+    for (let c of document.cookie.split(';')) {
+        const [k,v] = c.trim().split('=');
+        if (k === name) return decodeURIComponent(v);
+    }
+    return '';
+}
+</script>
+{% endblock %}

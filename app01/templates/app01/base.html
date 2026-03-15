@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}灵枢智医 · LingShu AI 智慧医疗平台{% endblock %}</title>
+    {% load static %}
+    {% csrf_token %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'app01/css/base.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<nav class="dm-navbar navbar navbar-expand-lg fixed-top">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand dm-brand" href="/index/">
+            <span class="brand-icon">⬡</span>
+            <span class="brand-name">LingShu</span>
+            <span class="brand-sub">灵枢智医</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+            <ul class="navbar-nav ms-auto align-items-center gap-1">
+
+                <li class="nav-item">
+                    <a class="nav-link dm-nav-link" href="/index/">
+                        <i class="fa fa-home me-1"></i>主页
+                    </a>
+                </li>
+
+                <!-- AI 诊断下拉 -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dm-nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="fa fa-stethoscope me-1"></i>AI 诊断
+                    </a>
+                    <ul class="dropdown-menu dm-dropdown">
+                        <li>
+                            <a class="dropdown-item" href="/agent/">
+                                <i class="fa fa-comments me-2"></i>AI 问诊
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/skin/">
+                                <i class="fa fa-hand-dots me-2"></i>皮肤病分类
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- 影像检测下拉 -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dm-nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="fa fa-microscope me-1"></i>影像检测
+                    </a>
+                    <ul class="dropdown-menu dm-dropdown">
+                        <li>
+                            <a class="dropdown-item" href="/mask/">
+                                <i class="fa fa-circle-dot me-2"></i>血细胞检测
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/cell/">
+                                <i class="fa fa-robot me-2"></i>Agent 零样本检测
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/white_lung/">
+                                <i class="fa fa-lungs me-2"></i>白肺 CT 检测
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/lung/">
+                                <i class="fa fa-dna me-2"></i>血细胞分析
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link dm-nav-link" href="/screen/">
+                        <i class="fa fa-chart-bar me-1"></i>疾病大数据
+                    </a>
+                </li>
+
+                <!-- 健康贴士下拉 -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dm-nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="fa fa-heart me-1"></i>健康贴士
+                    </a>
+                    <ul class="dropdown-menu dm-dropdown">
+                        <li>
+                            <a class="dropdown-item" href="/health/">
+                                <i class="fa fa-leaf me-2"></i>健康小贴士
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/medical/">
+                                <i class="fa fa-pills me-2"></i>药品科普
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/protect/">
+                                <i class="fa fa-shield-heart me-2"></i>健康小妙招
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="dm-main">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- 页脚 -->
+<footer class="dm-footer">
+    <div class="container text-center">
+        <div class="footer-brand">灵枢智医 · LingShu AI</div>
+        <div class="footer-sub">智慧医疗综合平台 | AI问诊 · 影像分析 · 数据可视化 · 健康教育</div>
+        <div class="footer-copy">© 2026 灵枢智医 · LingShu Team · All Rights Reserved</div>
+    </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+// 全局 CSRF 工具函数，所有页面共用
+function getCookie(name) {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta && name === 'csrftoken') return meta.getAttribute('content');
+    for (let c of document.cookie.split(';')) {
+        const [k, v] = c.trim().split('=');
+        if (k === name) return decodeURIComponent(v);
+    }
+    return '';
+}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,285 @@
+/* =============================================
+   DM-AI 基础样式 —— 深青·医典风格
+   ============================================= */
+
+:root {
+    --primary: #0a3d62;
+    --accent: #00b4d8;
+    --accent2: #48cae4;
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --text: #1a2a3a;
+    --text-muted: #5a7080;
+    --border: #d0dce8;
+    --success: #27ae60;
+    --warning: #f39c12;
+    --danger: #e74c3c;
+    --radius: 12px;
+    --shadow: 0 4px 24px rgba(10,61,98,.10);
+    --shadow-lg: 0 12px 48px rgba(10,61,98,.16);
+    --font-serif: 'Noto Serif SC', serif;
+    --font-sans: 'Noto Sans SC', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    padding-top: 70px;
+}
+
+/* ---- 导航栏 ---- */
+.dm-navbar {
+    background: rgba(10,61,98,.97);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,180,216,.25);
+    padding: 10px 0;
+    transition: all .3s;
+}
+
+.dm-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.brand-icon {
+    font-size: 1.6rem;
+    color: var(--accent);
+    line-height: 1;
+}
+
+.brand-name {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: .04em;
+}
+
+.brand-sub {
+    font-size: .75rem;
+    color: var(--accent);
+    background: rgba(0,180,216,.15);
+    border: 1px solid rgba(0,180,216,.4);
+    border-radius: 4px;
+    padding: 1px 7px;
+    letter-spacing: .1em;
+    font-weight: 500;
+}
+
+.dm-nav-link {
+    color: rgba(255,255,255,.82) !important;
+    font-size: .88rem;
+    font-weight: 400;
+    padding: 6px 14px !important;
+    border-radius: 8px;
+    transition: all .2s;
+    letter-spacing: .02em;
+}
+
+.dm-nav-link:hover,
+.dm-nav-link.active {
+    color: var(--accent) !important;
+    background: rgba(0,180,216,.12);
+}
+
+.dm-dropdown {
+    background: #0d4a7a;
+    border: 1px solid rgba(0,180,216,.3);
+    border-radius: 10px;
+    padding: 6px;
+    min-width: 160px;
+}
+
+.dm-dropdown .dropdown-item {
+    color: rgba(255,255,255,.82);
+    border-radius: 6px;
+    font-size: .87rem;
+    padding: 8px 14px;
+    transition: all .15s;
+}
+
+.dm-dropdown .dropdown-item:hover {
+    background: rgba(0,180,216,.2);
+    color: var(--accent);
+}
+
+/* ---- 主内容区 ---- */
+.dm-main {
+    min-height: calc(100vh - 70px - 120px);
+}
+
+/* ---- 页脚 ---- */
+.dm-footer {
+    background: var(--primary);
+    color: rgba(255,255,255,.7);
+    padding: 32px 0 20px;
+    margin-top: 60px;
+}
+
+.footer-brand {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 6px;
+    letter-spacing: .05em;
+}
+
+.footer-sub {
+    font-size: .82rem;
+    margin-bottom: 10px;
+    opacity: .7;
+}
+
+.footer-copy {
+    font-size: .76rem;
+    opacity: .5;
+}
+
+/* ---- 通用卡片 ---- */
+.dm-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    transition: transform .2s, box-shadow .2s;
+}
+
+.dm-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ---- 通用按钮 ---- */
+.btn-dm-primary {
+    background: linear-gradient(135deg, var(--primary), #1a6ea8);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 28px;
+    font-weight: 500;
+    font-size: .9rem;
+    letter-spacing: .03em;
+    transition: all .2s;
+    cursor: pointer;
+}
+
+.btn-dm-primary:hover {
+    background: linear-gradient(135deg, #1a6ea8, var(--accent));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,180,216,.3);
+    color: #fff;
+}
+
+.btn-dm-accent {
+    background: linear-gradient(135deg, var(--accent), #0096c7);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 28px;
+    font-weight: 500;
+    font-size: .9rem;
+    transition: all .2s;
+    cursor: pointer;
+}
+
+.btn-dm-accent:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,180,216,.35);
+    color: #fff;
+}
+
+/* ---- 章节标题 ---- */
+.section-title {
+    font-family: var(--font-serif);
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: .03em;
+    margin-bottom: 8px;
+}
+
+.section-sub {
+    font-size: .9rem;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+}
+
+.section-divider {
+    width: 48px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--primary));
+    border-radius: 2px;
+    margin-bottom: 12px;
+}
+
+/* ---- 标签/徽章 ---- */
+.dm-badge {
+    display: inline-block;
+    font-size: .72rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+    letter-spacing: .05em;
+}
+
+.dm-badge-blue { background: rgba(0,180,216,.12); color: var(--accent); border: 1px solid rgba(0,180,216,.3); }
+.dm-badge-green { background: rgba(39,174,96,.12); color: var(--success); border: 1px solid rgba(39,174,96,.3); }
+.dm-badge-orange { background: rgba(243,156,18,.12); color: var(--warning); border: 1px solid rgba(243,156,18,.3); }
+.dm-badge-red { background: rgba(231,76,60,.12); color: var(--danger); border: 1px solid rgba(231,76,60,.3); }
+
+/* ---- 上传区域 ---- */
+.upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    background: #f8fbfd;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(0,180,216,.04);
+}
+
+.upload-zone .upload-icon {
+    font-size: 2.5rem;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: block;
+}
+
+/* ---- 加载动画 ---- */
+.dm-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(0,180,216,.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- 结果面板 ---- */
+.result-panel {
+    background: linear-gradient(135deg, #f0f8ff, #e8f4fd);
+    border: 1px solid rgba(0,180,216,.25);
+    border-radius: var(--radius);
+    padding: 24px;
+}
+
+/* ---- 响应式 ---- */
+@media (max-width: 768px) {
+    .section-title { font-size: 1.35rem; }
+    .dm-navbar .brand-sub { display: none; }
+}
